@@ -51,6 +51,7 @@ export const registrarEmpleado = async (req, res) => {
   }
 };
 
+// Eliminar un empleado por su ID
 export const eliminarEmpleado = async (req, res) => {
   try {
     const [result] = await pool.query('DELETE FROM Empleados WHERE id_empleado = ?', [req.params.id]);
@@ -70,6 +71,7 @@ export const eliminarEmpleado = async (req, res) => {
   }
 };
 
+// Actualizar un empleado por su ID (parcial o completa)
 export const actualizarEmpleado = async (req, res) => {
   try {
     const { id } = req.params;

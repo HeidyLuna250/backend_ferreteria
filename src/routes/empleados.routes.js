@@ -12,10 +12,10 @@ router.get('/empleado/:id', obtenerEmpleado);
 // Ruta para insertar un nuevo empleado
 router.post('/registrarempleado', registrarEmpleado);
 
-// Ruta para eliminar una empleado por id
+// Ruta para eliminar un empleado por su ID
 router.delete('/eliminarempleado/:id', eliminarEmpleado);
 
-// Ruta para actualizar una categoría por su ID
+// Ruta para actualizar un empleado por su ID
 router.patch('/actualizarempleado/:id', actualizarEmpleado);
 
 export default router;

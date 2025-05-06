@@ -27,4 +27,3 @@ export const obtenerComprasConDetalles = async (req, res) => {
     });
   }
 };
-
