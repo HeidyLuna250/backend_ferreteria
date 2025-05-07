@@ -1,7 +1,10 @@
 import { Router } from 'express';
-import { obtenerVentasConDetalles, obtenerVentas, eliminarVenta, registrarVenta, actualizarVenta } from '../controllers/ventas.controller.js';
+import { obtenerVentasConDetalles, obtenerVentas, eliminarVenta, registrarVenta, actualizarVenta, obtenerVentaPorId } from '../controllers/ventas.controller.js';
 
 const router = Router();
+
+// Ruta para obtener una venta por su id
+router.get('/obtenerventaporid/:id_venta', obtenerVentaPorId);
 
 // Ruta para obtener todas las ventas
 router.get('/ventas', obtenerVentasConDetalles);
