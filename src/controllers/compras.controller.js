@@ -75,10 +75,9 @@ export const registrarCompra = async (req, res) => {
   const { id_empleado, fecha_compra, total_compra, detalles } = req.body;
 
   try {
-    const fechaCompraFormateada = new Date(fecha_compra).toISOString().slice(0, 19).replace('T', ' '); // Convierte a 'YYYY-MM-DD HH:mm:ss'
     const [compraResult] = await pool.query(
       'INSERT INTO compras (id_empleado, fecha_compra, total_compra) VALUES (?, ?, ?)',
-      [id_empleado, fechaCompraFormateada, total_compra]
+      [id_empleado, fecha_compra, total_compra]
     );
 
     const id_compra = compraResult.insertId;
@@ -99,4 +98,85 @@ export const registrarCompra = async (req, res) => {
     res.status(500).json({ mensaje: 'Error al registrar la compra', error: error.message });
   }
 };
+
+// Actualizar una compra con sus detalles
+export const actualizarCompra = async (req, res) => {
+  const { id_compra } = req.params;
+  const { id_empleado, fecha_compra, total_compra, detalles } = req.body;
+
+  try {
+    // Actualizar la compra
+    const [compraResult] = await pool.query(
+      'UPDATE Compras SET id_empleado = ?, fecha_compra = ?, total_compra = ? WHERE id_compra = ?',
+      [id_empleado, fecha_compra, total_compra, id_compra]
+    );
+
+    if (compraResult.affectedRows === 0) {
+      return res.status(404).json({ mensaje: 'Compra no encontrada' });
+    }
+
+    // Obtener detalles actuales para restaurar stock
+    const [detallesActuales] = await pool.query(
+      'SELECT id_producto, cantidad FROM Detalles_Compras WHERE id_compra = ?',
+      [id_compra]
+    );
+
+    // Restaurar stock de productos anteriores
+    for (const detalle of detallesActuales) {
+      await pool.query(
+        'UPDATE Productos SET stock = stock - ? WHERE id_producto = ?',
+        [detalle.cantidad, detalle.id_producto]
+      );
+    }
+
+    // Eliminar detalles actuales
+    await pool.query('DELETE FROM Detalles_Compras WHERE id_compra = ?', [id_compra]);
+
+    // Insertar nuevos detalles y actualizar stock
+    for (const detalle of detalles) {
+      await pool.query(
+        'INSERT INTO Detalles_Compras (id_compra, id_producto, cantidad, precio_unitario) VALUES (?, ?, ?, ?)',
+        [id_compra, detalle.id_producto, detalle.cantidad, detalle.precio_unitario]
+      );
+      await pool.query(
+        'UPDATE Productos SET stock = stock + ? WHERE id_producto = ?',
+        [detalle.cantidad, detalle.id_producto]
+      );
+    }
+
+    res.json({ mensaje: 'Compra actualizada correctamente' });
+  } catch (error) {
+    res.status(500).json({ mensaje: 'Error al actualizar la compra', error: error.message });
+  }
+};
+
+  // Obtener una compra específica por id_compra
+  export const obtenerCompraPorId = async (req, res) => {
+    try {
+      const { id_compra } = req.params;
+
+      const [compra] = await pool.query(`
+        SELECT 
+          id_compra,
+          id_empleado,
+          fecha_compra,
+          total_compra
+        FROM Compras
+        WHERE id_compra = ?
+      `, [id_compra]);
+
+      if (compra.length === 0) {
+        return res.status(404).json({ mensaje: 'Compra no encontrada' });
+      }
+
+      res.json(compra[0]); // Devuelve solo el primer objeto (una sola compra)
+    } catch (error) {
+      return res.status(500).json({
+        mensaje: 'Ha ocurrido un error al obtener los datos de la compra.',
+        error: error.message
+      });
+    }
+  };
+
+
 
